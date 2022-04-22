@@ -118,9 +118,6 @@
     <string name="game_space_title">Game Space</string>
     <string name="game_space_summary">Enhance your gaming experience</string>
 
-    <!-- Battery temperature -->
-    <string name="battery_temperature">Battery temperature</string>
-
     <!-- Summary for list to control apps that ignore battery saving restrictions -->
     <string name="high_power_apps_summary">Battery optimization availability</string>
 
@@ -200,7 +197,7 @@
     <string name="superior_battery_type_title">Battery</string>
     <string name="superior_screen_title">Screen</string>
     <string name="net_info">Network</string>
-    <string name="mod_info">@string/model_info</string> 
+    <string name="mod_info">@string/model_info</string>
     <string name="id_info">Identifiers</string>
     <string name="model_summary">Model, phone number, IMEI, etc</string>
     <string name="model_name">Device status</string>
