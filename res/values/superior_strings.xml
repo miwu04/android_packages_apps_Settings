@@ -222,4 +222,7 @@
     <string name="high_touch_polling_rate_title">High touch polling rate</string>
     <string name="high_touch_polling_rate_summary">Increase touchscreen polling rate</string>
 
+    <!-- Battery health -->
+    <string name="current_battery_capacity">Current capacity</string>
+    <string name="designed_battery_capacity">Maximum capacity</string>
 </resources>
