@@ -59,6 +59,8 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.lang.Integer;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -80,6 +82,10 @@ public class PowerUsageSummary extends PowerUsageBase implements
     private static final String KEY_CURRENT_BATTERY_CAPACITY = "current_battery_capacity";
     private static final String KEY_DESIGNED_BATTERY_CAPACITY = "designed_battery_capacity";
     private static final String KEY_BATTERY_CHARGE_CYCLES = "battery_charge_cycles";
+
+    private String mBatDesCap;
+    private String mBatCurCap;
+    private String mBatChgCyc;
 
     @VisibleForTesting
     static final int BATTERY_INFO_LOADER = 1;
@@ -113,8 +119,6 @@ public class PowerUsageSummary extends PowerUsageBase implements
     Preference mHelpPreference;
     @VisibleForTesting
     Preference mBatteryUsagePreference;
-
-    boolean mBatteryHealthSupported;
 
     @VisibleForTesting
     final ContentObserver mSettingsObserver = new ContentObserver(new Handler()) {
@@ -201,11 +205,20 @@ public class PowerUsageSummary extends PowerUsageBase implements
                 KEY_BATTERY_CHARGE_CYCLES);
         mBatteryUtils = BatteryUtils.getInstance(getContext());
 
-        mBatteryHealthSupported = getResources().getBoolean(R.bool.config_supportBatteryHealth);
-        if (!mBatteryHealthSupported) {
-            getPreferenceScreen().removePreference(mCurrentBatteryCapacity);
-            getPreferenceScreen().removePreference(mDesignedBatteryCapacity);
-            getPreferenceScreen().removePreference(mBatteryChargeCycles);
+        // Check availability of Battery Health
+        Preference mDesignedHealthPref = (Preference) findPreference(KEY_DESIGNED_BATTERY_CAPACITY);
+        if (!getResources().getBoolean(R.bool.config_supportBatteryHealth)) {
+            getPreferenceScreen().removePreference(mDesignedHealthPref);
+        }
+
+        Preference mCurrentHealthPref = (Preference) findPreference(KEY_CURRENT_BATTERY_CAPACITY);
+        if (!getResources().getBoolean(R.bool.config_supportBatteryHealth)) {
+            getPreferenceScreen().removePreference(mCurrentHealthPref);
+        }
+
+        Preference mCyclesHealthPref = (Preference) findPreference(KEY_BATTERY_CHARGE_CYCLES);
+        if (!getResources().getBoolean(R.bool.config_supportBatteryHealth)) {
+            getPreferenceScreen().removePreference(mCyclesHealthPref);
         }
 
         if (Utils.isBatteryPresent(getContext())) {
@@ -316,10 +329,18 @@ public class PowerUsageSummary extends PowerUsageBase implements
         // reload BatteryInfo and updateUI
         restartBatteryInfoLoader();
 
-        if (mBatteryHealthSupported) {
-            mCurrentBatteryCapacity.setSummary(parseBatterymAhText(getResources().getString(R.string.config_batteryCalculatedCapacity)));
-            mDesignedBatteryCapacity.setSummary(parseBatterymAhText(getResources().getString(R.string.config_batteryDesignCapacity)));
-            mBatteryChargeCycles.setSummary(parseBatteryCycle(getResources().getString(R.string.config_batteryChargeCycles)));
+        mBatDesCap = getResources().getString(R.string.config_batDesCap);
+        mBatCurCap = getResources().getString(R.string.config_batCurCap);
+        mBatChgCyc = getResources().getString(R.string.config_batChargeCycle);
+
+        mCurrentBatteryCapacity.setSubtitle(parseBatterymAhText(mBatCurCap));
+        mDesignedBatteryCapacity.setSubtitle(parseBatterymAhText(mBatDesCap));
+        mBatteryChargeCycles.setSubtitle(parseBatteryCycle(mBatChgCyc));
+
+        if (BatteryInfo.batteryTemp != 0f) {
+            mBatteryTempPref.setSubtitle(BatteryInfo.batteryTemp + " \u2103");
+        } else {
+            mBatteryTempPref.setSubtitle(getResources().getString(R.string.status_unavailable));
         }
     }
 
@@ -431,19 +452,5 @@ public class PowerUsageSummary extends PowerUsageBase implements
     }
 
     public static final BaseSearchIndexProvider SEARCH_INDEX_DATA_PROVIDER =
-            new BaseSearchIndexProvider(R.xml.power_usage_summary) {
-
-                @Override
-                public List<String> getNonIndexableKeys(Context context) {
-                    List<String> keys = super.getNonIndexableKeys(context);
-
-                    if (!context.getResources().getBoolean(R.bool.config_supportBatteryHealth)) {
-                        keys.add(KEY_CURRENT_BATTERY_CAPACITY);
-                        keys.add(KEY_DESIGNED_BATTERY_CAPACITY);
-                        keys.add(KEY_BATTERY_CHARGE_CYCLES);
-                    }
-
-                    return keys;
-                }
-    };
+            new BaseSearchIndexProvider(R.xml.power_usage_summary);
 }
